@@ -1,6 +1,9 @@
 from retro_contest.local import make
 
+n_states = #need to pick
+
 def main():
+    #pick the game and level
     env = make(game='SonicTheHedgehog-Genesis',state='LabyrinthZone.Act1')
     obs = env.reset()
     while True:
