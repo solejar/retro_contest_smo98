@@ -7,13 +7,16 @@ import numpy as np
 import gym
 from gym import wrappers
 
+from retro_contest.local import make
+
 n_states = 10
-iter_max = 3000
+n_actions = 12
+iter_max = 1000
 
 initial_lr = 1.0 # Learning rate
 min_lr = 0.003
 gamma = 1.0
-t_max = 10000
+t_max = 4500
 eps = 0.02
 
 def run_episode(env, policy=None, render=False):
@@ -35,6 +38,7 @@ def run_episode(env, policy=None, render=False):
             break
     return total_reward
 
+#This needs to be updated for sonic
 def obs_to_state(env, obs):
     """ Maps an observation to state """
     env_low = env.observation_space.low
@@ -45,14 +49,12 @@ def obs_to_state(env, obs):
     return a, b
 
 if __name__ == '__main__':
-    env_name = 'MountainCar-v0'
-    env = gym.make(env_name)
+    env = make(game='SonicTheHedgehog-Genesis',state='LabyrinthZone.Act1')
     env.seed(0)
     np.random.seed(0)
     print ('----- using Q Learning -----')
-    q_table = np.zeros((n_states, n_states, 3))
-
-    renderTrue = False
+    q_table = np.zeros((n_states, n_states, n_actions))
+    renderTrue = True
     for i in range(iter_max):
         obs = env.reset()
         total_reward = 0
@@ -61,6 +63,7 @@ if __name__ == '__main__':
 
         for j in range(t_max):
             a, b = obs_to_state(env, obs)
+
             if np.random.uniform(0, 1) < eps:
                 action = np.random.choice(env.action_space.n)
             else:
@@ -69,28 +72,21 @@ if __name__ == '__main__':
                 probs = logits_exp / np.sum(logits_exp)
                 action = np.random.choice(env.action_space.n, p=probs)
             obs, reward, done, _ = env.step(action)
+            if(renderTrue):
+                env.render()
             total_reward += reward
-            #if(renderTrue):
-            #    env.render()
             # update q table
             a_, b_ = obs_to_state(env, obs)
             q_table[a][b][action] = q_table[a][b][action] + eta * (reward + gamma *  np.max(q_table[a_][b_]) - q_table[a][b][action])
             if done:
                 break
         if i % 100 == 0:
-            #renderTrue = True
-
-            #print('Iteration #%d -- Total reward = %d.' %(i+1, total_reward))
-            solution_policy = np.argmax(q_table, axis=2)
-            solution_policy_scores = [run_episode(env, solution_policy, False) for _ in range(100)]
-            print("Iterations completed: %d" %(i+1))
-            print("Average score of solution for best solution_policy = ", np.mean(solution_policy_scores))
-            run_episode(env, solution_policy, True)
-
-        #else:
-            #renderTrue = False
+            renderTrue = True
+            print('Iteration #%d -- Total reward = %d.' %(i+1, total_reward))
+        else:
+            renderTrue = False
     solution_policy = np.argmax(q_table, axis=2)
-
+    solution_policy_scores = [run_episode(env, solution_policy, False) for _ in range(100)]
     print("Average score of solution = ", np.mean(solution_policy_scores))
     # Animate it
     run_episode(env, solution_policy, True)

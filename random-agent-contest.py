@@ -1,6 +1,6 @@
 from retro_contest.local import make
 
-n_states = #need to pick
+
 
 def main():
     #pick the game and level
@@ -13,6 +13,7 @@ def main():
         env.render()
         if done:
             obs = env.reset()
+            #env.close()
 
 if __name__ == '__main__':
     main()
